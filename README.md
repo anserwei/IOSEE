@@ -27,6 +27,16 @@ A high-performance Fortran package for calculating infrared ocean surface emissi
 
 ---
 
+## Importance Notes
+- **The default water optical constant file**: the water_optical_constants.nc is located at https://github.com/anserwei/IOSEE/releases/download/v1.0.0/
+
+cd data
+curl -LO https://github.com/anserwei/IOSEE/releases/download/v1.0.0/water_optical_constants.nc
+# or:
+wget    https://github.com/anserwei/IOSEE/releases/download/v1.0.0/water_optical_constants.nc
+
+---
+
 ## Quick Start
 
 ### Prerequisites
