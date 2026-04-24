@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A high-performance Fortran package for calculating infrared ocean surface emissivity based on **Wu & Smith (1997)** and **Masuda (2006)** physical models. Supports spectral, narrow-band, and polarized emissivity calculations with OpenMP parallelization.
+A high-performance Fortran package for calculating infrared ocean surface emissivity based on **Masuda (2006)** physical models. Supports spectral, narrow-band, and polarized emissivity calculations with OpenMP parallelization.
 
 ---
 
