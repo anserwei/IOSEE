@@ -1,0 +1,68 @@
+IOSEE - Infrared Ocean Surface Effective Emissivity
+Copyright 2025- Texas A&M University
+
+This product includes software developed at
+Atmospheric & Oceanic Optics Group, Department of Atmospheric Sciences,
+Texas A&M University (https://atmo.tamu.edu/)
+
+Original Author: Dr. Jian Wei (anser@tamu.edu)
+
+================================================================================
+About this NOTICE file
+================================================================================
+
+This NOTICE file is provided as required by Section 4(d) of the Apache License,
+Version 2.0.  You must retain this NOTICE in all copies or substantial portions
+of the software.  The Apache License does not grant permission to use the trade
+names, trademarks, service marks, or product names of the copyright holder,
+except as required by this notice.
+
+================================================================================
+Scientific Models and Publications
+================================================================================
+
+This software implements ocean surface emissivity models based on the following
+peer-reviewed publications.  Users of this software are encouraged to cite the
+relevant works:
+
+  Wu, X., & Smith, W. L. (1997). Emissivity of rough sea surface for 8-13 um:
+  modeling and verification. Applied Optics, 36(12), 2609-2619.
+  https://doi.org/10.1364/AO.36.002609
+
+  Masuda, K. (2006). Infrared sea surface emissivity including multiple
+  reflection effect for isotropic Gaussian slope distribution model.
+  Remote Sensing of Environment, 103(4), 488-496.
+  https://doi.org/10.1016/j.rse.2006.04.011
+
+  Nalli, N. R., et al. (2008). Emissivity and reflection model for calculating
+  unpolarized isotropic water surface-leaving radiance in the infrared.
+  Applied Optics, 47(21), 3701-3721.
+  https://doi.org/10.1364/AO.47.003701
+
+  Nalli, N. R., et al. (2023). Reducing biases in thermal infrared surface
+  radiance calculations over global oceans. IEEE Transactions on Geoscience
+  and Remote Sensing, 61, 1-18.
+  https://doi.org/10.1109/TGRS.2023.3234408
+
+  Cox, C., & Munk, W. (1954). Measurement of the roughness of the sea surface
+  from photographs of the sun's glitter. Journal of the Optical Society of
+  America, 44(11), 838-850.
+  https://doi.org/10.1364/JOSA.44.000838
+
+  Wang, S., Yang, P., Brindley, H. E., Huang, X., & L'Ecuyer, T. S. (2026).
+  Enhanced full spectral temperature-dependent refractive index of liquid water
+  from supercooled to ambient conditions. Geophysical Research Letters, 53(6),
+  e2025GL119385. https://doi.org/10.1029/2025GL119385
+
+================================================================================
+Third-Party Software Components
+================================================================================
+
+lib/netcdf_handler.F90
+  This module is derived from NetCDF utility code originally developed at
+  the European Centre for Medium-Range Weather Forecasts (ECMWF).
+  Original copyright: (C) Copyright 2015-, ECMWF. All rights reserved.
+  The original code is licensed under the Apache License, Version 2.0.
+  Modifications for IOSEE: Dr. Jian Wei, Texas A&M University.
+
+================================================================================
