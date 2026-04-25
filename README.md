@@ -134,7 +134,7 @@ IOSEE/
 
 | Platform | Architecture | Optimization |
 |----------|--------------|--------------|
-| macOS | Apple Silicon M1-M4 | `-mcpu=native` |
+| macOS | Apple Silicon M chips | `-mcpu=native` |
 | macOS | Intel x86_64 | `-march=native` |
 | Linux | x86_64 | `-march=native` |
 | Linux | ARM64/aarch64 | `-mcpu=native` |
