@@ -14,7 +14,7 @@ A high-performance Fortran package for calculating infrared ocean surface emissi
 
 ## Reference
 
-- **Wei, J., Yang, P. (2026)**. *IOSEE: An Efficient and Flexible Infrared Ocean Surface Effective Emissivity Package for Remote Sensing, Numerical Weather Prediction, and Climate Modeling Applications *. in praperation
+- **Wei, J., Yang, P. (2026)**. *IOSEE: An Efficient and Flexible Infrared Ocean Surface Effective Emissivity Package for Remote Sensing, Numerical Weather Prediction, and Climate Modeling Applications *. under review
 
 ## Key Features
 
