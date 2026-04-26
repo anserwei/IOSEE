@@ -8,11 +8,10 @@
 !   - Polarized mode: Separate V and H polarization emissivity output
 !
 !   Reads configuration and input data, performs emissivity calculations using
-!   Wu & Smith (1997) and Masuda (2006) physics, outputs results to NetCDF.
+!   Masuda (2006) physics, outputs results to NetCDF.
 !
 ! Physical Models:
-!   - Wu & Smith (1997): Rough sea surface emissivity via Cox-Munk integration
-!   - Masuda (2006): Multiple reflection effects between wave facets
+!   - Masuda (2006): Rough sea surface emissivity via Cox-Munk integration, Multiple reflection effects between wave facets
 !   - Nalli et al. (2008, 2023): Effective view angle corrections
 !     SST-dependent 3D LUT (71 angles x 19 winds x 21 SSTs), PCHIP-interpolated
 !     along SST at runtime to produce a 2D (angle, wind) slice
