@@ -6,11 +6,11 @@ A high-performance Fortran package for calculating infrared ocean surface emissi
 
 ---
 
-**Version**: 1.0.0
-**License**: Apache License 2.0
-**Copyright**: (C) 2025 - Texas A&M University
-**Maintainer**: Atmospheric & Oceanic Optics Group, Department of Atmospheric Sciences
-**Contact**: Jian Wei ; Email: anser@tamu.edu
+- **Version**: 1.0.0
+- **License**: Apache License 2.0
+- **Copyright**: (C) 2025 - Texas A&M University
+- **Maintainer**: Atmospheric & Oceanic Optics Group, Department of Atmospheric Sciences
+- **Contact**: Jian Wei ; Email: anser@tamu.edu
 
 ## Reference
 
