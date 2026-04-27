@@ -36,7 +36,7 @@ shasum -a 256 water_optical_constants.nc
 
 ## Provenance
 
-`water_optical_constants*.nc` derives from:
+`water_optical_constants.nc` derives from:
 
 > Wang, S., Yang, P., Brindley, H. E., Huang, X., & L'Ecuyer, T. S. (2026).
 > *Enhanced full spectral temperature-dependent refractive index of liquid
