@@ -7,11 +7,11 @@ runtime.
 
 | File                                | Size   | Purpose                                                    |
 |-------------------------------------|--------|------------------------------------------------------------|
-| `effective_view_angle.nc`           | 84 KB  | Nalli et al. (2008, 2023) effective view angles (0–70°).   |
-| `normal_view_angle.nc`              | 10 KB  | Geometric view angles (0–85°) used for blending above 70°. |
-| `water_optical_constants_HQ.nc`     | 191 KB | Reduced-precision seawater refractive index (comparison).  |
-| `water_optical_constants_HQ_full.nc`| 191 KB | Full-resolution high-quality refractive index.             |
-| `water_optical_constants_HQ_SE.nc`  | 1.3 MB | Salinity-extended variant.                                 |
+| `effective_view_angle.nc`           | 84 KB  | Derived effective view angles.                             |
+| `normal_view_angle.nc`              | 10 KB  | Geometric view angles.                                     |
+| `water_optical_constants_HQ.nc`     | 191 KB | Reduced-precision pure water refractive index (HQ).        |
+| `water_optical_constants_HQ_full.nc`| 191 KB | Full-resolution high-quality refractive index (HQ).        |
+| `water_optical_constants_HQ_SE.nc`  | 1.3 MB | Pure water refractive index (HQ-SE).                       |
 
 ## Large file — download separately
 
