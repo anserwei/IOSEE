@@ -9,9 +9,9 @@ runtime.
 |-------------------------------------|--------|------------------------------------------------------------|
 | `effective_view_angle.nc`           | 84 KB  | Derived effective view angles.                             |
 | `normal_view_angle.nc`              | 10 KB  | Geometric view angles.                                     |
-| `water_optical_constants_HQ.nc`     | 191 KB | Reduced-precision pure water refractive index (HQ).        |
-| `water_optical_constants_HQ_full.nc`| 191 KB | Full-resolution high-quality refractive index (HQ).        |
-| `water_optical_constants_HQ_SE.nc`  | 1.3 MB | Pure water refractive index (HQ-SE).                       |
+| `water_optical_constants_HQ.nc`     | 191 KB | Reduced-resolution pure water refractive index (HQ).       |
+| `water_optical_constants_HQ_full.nc`| 191 KB | Full-resolution pure water  refractive index (HQ).         |
+| `water_optical_constants_HQ_SE.nc`  | 1.3 MB | Full-resolution pure water refractive index (HQ-SE).       |
 
 ## Large file — download separately
 
