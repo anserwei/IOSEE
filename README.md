@@ -19,7 +19,6 @@ A high-performance Fortran package for calculating infrared ocean surface emissi
 ## Key Features
 
 - **Three calculation modes**: Spectral, narrow-band, and polarized emissivity
-- **Full spectral range**: 10-5000 cm^-1 (far-infrared to thermal infrared)
 - **High performance**: 12,000+ calculations/second with OpenMP optimization
 - **Physical base**: Surface emission, multiple surface reflection based ocean surface emissivity physical models with effective viewing zenith angles approach
 - **Scientific accuracy**: Validation against independent shipborne and ground-based spectroradiometric observations spanning diverse oceanic thermal dynamical conditions
