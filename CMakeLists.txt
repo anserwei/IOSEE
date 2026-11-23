@@ -1,6 +1,29 @@
 cmake_minimum_required(VERSION 3.16)
 
 #==============================================================================
+# macOS SDK sysroot (must be set BEFORE project())
+#------------------------------------------------------------------------------
+# CMake >= 4.0 no longer sets CMAKE_OSX_SYSROOT automatically. Homebrew GCC is
+# configured with a hard-coded --with-sysroot pointing at the SDK that existed
+# when the bottle was built (e.g. MacOSX15.sdk). After an Xcode/CLT upgrade that
+# SDK disappears and every link fails with "ld: library 'System' not found".
+# Resolve the currently installed SDK via xcrun unless the user overrides it.
+#==============================================================================
+if(CMAKE_HOST_APPLE AND NOT CMAKE_OSX_SYSROOT AND NOT DEFINED ENV{SDKROOT})
+    execute_process(
+        COMMAND xcrun --sdk macosx --show-sdk-path
+        OUTPUT_VARIABLE _iosee_sdk_path
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _iosee_sdk_res
+    )
+    if(_iosee_sdk_res EQUAL 0 AND EXISTS "${_iosee_sdk_path}")
+        set(CMAKE_OSX_SYSROOT "${_iosee_sdk_path}" CACHE PATH "macOS SDK sysroot")
+        message(STATUS "macOS SDK sysroot: ${_iosee_sdk_path}")
+    endif()
+endif()
+
+#==============================================================================
 # Pre-Project Compiler Detection (prevents CMake cache loops)
 #==============================================================================
 if(NOT CMAKE_Fortran_COMPILER AND NOT DEFINED ENV{FC})
