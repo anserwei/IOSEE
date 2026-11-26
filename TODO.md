@@ -24,7 +24,6 @@ package.
 
 ### Performance Optimizations
 - [ ] **GPU acceleration (OpenACC/CUDA)**
-  - [ ] Evaluate feasibility for Fresnel LUT interpolation
   - [ ] Consider NVIDIA CUDA Fortran for HPC systems
   - [ ] Benchmark against CPU-only OpenMP version
 
@@ -39,7 +38,6 @@ package.
 
 ### Longterm Possible Features (Hard)
 - [ ] **Add foam emissivity model**
-  - [ ] Implement Koepke (1984) foam coverage model
   - [ ] Add whitecap fraction as function of wind speed
   - [ ] Blend foam and water emissivity
 
