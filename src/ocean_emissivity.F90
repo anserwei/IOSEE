@@ -11,7 +11,7 @@
 !
 ! Features:
 !   - Masuda (2006) rough surface emissivity via Cox-Munk integration
-!   - Masuda (2006) multiple reflection effects (up to 5 orders)
+!   - Masuda (2006) multiple reflection effects (up to max_reflection_order, default 8)
 !   - Fresnel lookup table (LUT) for fast reflectance calculations
 !   - Full spectral range support: 10-5000 cm^-1 (n: 1.0-3.0, k: 0.0-1.5)
 !   - Unpolarized and polarized (V/H) emissivity modes
@@ -54,6 +54,9 @@
 !   Jan 2026  - Extended Fresnel LUT range: n_max 1.6->3.0, k_max 0.5->1.5 (v0.9.1)
 !             - Fixed emissivity anomalies at wavenumbers < 200 cm^-1
 !   Mar 2026  - First stable release (v1.0.0)
+!   Nov 2026  - Fixed H-pol multiple reflection in polarized mode (v1.1.0)
+!             - Maximum multiple-reflection order user-configurable
+!               (max_reflection_order, default 8)
 !
 
 module ocean_emissivity
@@ -77,7 +80,10 @@ module ocean_emissivity
     !-----------------------------------------------------------------------
     ! Physics and numerical parameters (optimized for 10X speedup)
     !-----------------------------------------------------------------------
-    integer(kind=jpim), parameter :: MAX_REFLECTION_ORDER = 5
+    integer(kind=jpim), parameter :: DEFAULT_REFLECTION_ORDER = 8
+    ! Maximum multiple-reflection order; set once by initialize_workspace_pool_emiss
+    ! before any parallel region (read-only afterwards, thread-safe)
+    integer(kind=jpim), save      :: max_reflection_order = DEFAULT_REFLECTION_ORDER
     
     ! Angular grid resolution for Cox-Munk slope distribution integration
     ! Fine grid (91x181) is required for accurate
@@ -248,12 +254,23 @@ contains
     ! Subroutine: initialize_workspace_pool_emiss
     ! Purpose: Initialize thread workspace pool
     !==============================================================================
-    subroutine initialize_workspace_pool_emiss(error)
+    subroutine initialize_workspace_pool_emiss(error, max_order)
         type(error_type), intent(out) :: error
+        integer(kind=jpim), optional, intent(in) :: max_order
         integer(kind=jpim) :: num_threads, alloc_stat, i
 
         error%code = 0
         error%message = ""
+
+        ! Set maximum multiple-reflection order (default: DEFAULT_REFLECTION_ORDER)
+        if (present(max_order)) then
+            if (max_order < 1) then
+                error%code = 1
+                error%message = "max_reflection_order must be >= 1"
+                return
+            end if
+            max_reflection_order = max_order
+        end if
 
         ! Initialize parallel environment only
         !$OMP PARALLEL
@@ -1142,7 +1159,7 @@ contains
         chunk_size = min(config%MAX_CHUNK_SIZE, max(config%MIN_CHUNK_SIZE, (N_THETA*N_PHI)/(4*max_threads)))
 
         ! PHASE 1 OPTIMIZATION: Early termination loop with adaptive convergence
-        do k = 1, MAX_REFLECTION_ORDER
+        do k = 1, max_reflection_order
             !$OMP PARALLEL DO DEFAULT(SHARED) &
             !$OMP PRIVATE(i,j) REDUCTION(.or.:error_detected) &
             !$OMP SCHEDULE(guided,chunk_size)
@@ -1335,6 +1352,7 @@ contains
         real(kind=jprd) :: mean_emiss_v, norm_factor_v, mean_emiss_h, norm_factor_h
         real(kind=jprd), allocatable :: refle_fresnel_save_v(:,:), refle_fresnel_save_h(:,:)
         real(kind=jprd), allocatable :: integral_fun_save(:,:)
+        real(kind=jprd), allocatable :: normalized_emiss_sp_save(:,:)
 
         ! Initialize outputs
         emiss_final_v = 0.0_jprd
@@ -1350,12 +1368,12 @@ contains
 
         ! Allocate temporary arrays for polarized calculations
         allocate(refle_fresnel_save_v(N_THETA,N_PHI), refle_fresnel_save_h(N_THETA,N_PHI), &
-                 integral_fun_save(N_THETA,N_PHI))
+                 integral_fun_save(N_THETA,N_PHI), normalized_emiss_sp_save(N_THETA,N_PHI))
 
         ! 1. Compute Fresnel with polarization enabled
         call compute_fresnel_kernel(refm, ws, cosvza, sinvza, .false., error, enable_polarization=.true.)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
 
@@ -1366,7 +1384,7 @@ contains
         ! 2. Compute integral kernel
         call compute_integral_kernel(ws, error)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
         integral_fun_save = ws%reflections%integral_fun
@@ -1374,7 +1392,7 @@ contains
         ! 3. Initial emissivity calculation for vertical polarization
         call compute_polarized_emissivity_integrals(ws, cosvza, mean_emiss_v, norm_factor_v, error, .true.)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
 
@@ -1388,7 +1406,7 @@ contains
         ! 4. Initial emissivity calculation for horizontal polarization
         call compute_polarized_emissivity_integrals(ws, cosvza, mean_emiss_h, norm_factor_h, error, .false.)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
 
@@ -1402,32 +1420,38 @@ contains
         ! 5. Reflection angles
         call compute_reflection_angles_kernel(ws, cosvza, sinvza, error)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
 
         ! 6. Normalization (uses unpolarized version for consistency)
         call compute_normalization_kernel(ws, refm, error, enable_polarization=.true.)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
+
+        ! Save initial reflected-path emission: compute_multiple_reflection_kernel
+        ! overwrites normalized_emiss_sp in place, so the H pass must start from
+        ! the same initial state as the V pass
+        normalized_emiss_sp_save = ws%iterations%normalized_emiss_sp
 
         ! 7. Multiple reflection for vertical polarization
         call compute_multiple_reflection_kernel(ws, refm, cosvza, norm_factor_v, &
                                                refle_fresnel_save_v, integral_fun_save, &
                                                multi_refle_v, error)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
 
-        ! 8. Multiple reflection for horizontal polarization
+        ! 8. Multiple reflection for horizontal polarization (restore initial state)
+        ws%iterations%normalized_emiss_sp = normalized_emiss_sp_save
         call compute_multiple_reflection_kernel(ws, refm, cosvza, norm_factor_h, &
                                                refle_fresnel_save_h, integral_fun_save, &
                                                multi_refle_h, error)
         if (error%code /= 0) then
-            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+            deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
             return
         end if
 
@@ -1438,7 +1462,7 @@ contains
         emiss_final_h = emiss_norefle_h + multi_refle_h
         emiss_final_h = max(0.0_jprd, min(1.0_jprd, emiss_final_h))
 
-        deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save)
+        deallocate(refle_fresnel_save_v, refle_fresnel_save_h, integral_fun_save, normalized_emiss_sp_save)
     end subroutine process_single_polarized_emissivity_case
 
 
