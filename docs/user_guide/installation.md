@@ -94,7 +94,7 @@ Running `./iosee` with no arguments prints the usage banner.
 
 ### Example Output
 ```
-IOSEE v1.0.0 - Ocean Surface Emissivity Calculator
+IOSEE v1.1.0 - Ocean Surface Emissivity Calculator
 Reading configuration: spectral_option1.config
 Computing spectral emissivity...
   Wavenumber range: 800.0 - 1200.0 cm^-1 (401 points)

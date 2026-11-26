@@ -80,8 +80,15 @@ refractive_index_filename = 'data/water_optical_constants.nc'
 |-----------|--------|-------------|
 | `no_multiple_reflection` | `.true.`, `.false.` | Skip multiple reflection calculation |
 | `use_effective_angle` | `.true.`, `.false.` | Use effective view angle LUT (default: `.true.`) |
+| `max_reflection_order` | integer, 1 – 20 | Maximum multiple-reflection order (default: `8`) |
 
 **`use_effective_angle`:** When `.true.` (default), angles <= 70 deg use the Nalli et al. effective view angle LUT and angles > 70 deg use the normal (geometric) view angle LUT with continuity correction at the 70 deg boundary. When `.false.`, the effective view angle LUT is skipped entirely and only the normal (geometric) view angle LUT is used for all angles.
+
+**`max_reflection_order`:** Upper limit on the number of inter-facet reflection orders summed in the multiple-reflection calculation (unpolarized and polarized V/H alike). Iteration always runs at least two orders and stops early once an additional order contributes less than 1e-8. Small view angles and low wind speeds converge well before the limit; at large view angles and high wind speeds the limit is reached. Truncation error relative to a 20-order reference (1000 cm⁻¹, 10–70 deg, 0–15 m/s) is ≈ 1e-3 at 5 orders, ≈ 1e-4 at 8 orders (default), and ≈ 4e-5 at 10 orders. Values outside 1 – 20 are rejected. Setting `5` reproduces the five-order limit used before 1.1.0.
+
+```fortran
+max_reflection_order = 8,
+```
 
 ## Example Configurations
 
