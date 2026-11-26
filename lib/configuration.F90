@@ -17,6 +17,7 @@
 !   - Array capacity management (up to 200 elements per parameter)
 !   - Multi-mode support: spectral, narrow-band, polarized
 !   - Output control: no_multiple_reflection option
+!   - Physics control: max_reflection_order option
 !
 ! Configuration Parameters:
 !   - wavenum_start, wavenum_end, n_wavenum: Spectral range
@@ -27,6 +28,7 @@
 !   - mode: 'spectral' or 'narrow-band'
 !   - polarization: 'enable' or 'disable'
 !   - no_multiple_reflection: Output first-order emissivity only
+!   - max_reflection_order: Maximum multiple-reflection order (1-20, default 8)
 !
 ! Public Interface:
 !   - config_type: Main configuration derived type
@@ -81,6 +83,7 @@ module configuration
         logical            :: is_wavelength_input = .false.    ! Flag to indicate wavelength input
         logical            :: no_multiple_reflection = .false. ! Output emissivity without multiple reflection
         logical            :: use_effective_angle = .true.    ! Use effective view angle LUT
+        integer(kind=jpim) :: max_reflection_order = 8        ! Maximum multiple-reflection order (1-20)
 
         ! Environmental parameters
         real(kind=jprd)    :: sea_surface_temperature   = 298.0_jprd     ! Sea surface temperature (K)
@@ -195,6 +198,7 @@ contains
         ! Output control
         logical            :: no_multiple_reflection
         logical            :: use_effective_angle
+        integer(kind=jpim) :: max_reflection_order
         character(len=512) :: output_file
 
         namelist /configuration/ auxiliary_filename, refractive_index_filename, &
@@ -233,6 +237,7 @@ contains
             n_wavelen, &
             no_multiple_reflection, &
             use_effective_angle, &
+            max_reflection_order, &
             output_file
 
         if (.not. present(file_name) .and. .not. present(unit)) then
@@ -278,6 +283,7 @@ contains
         ! Initialize output control parameters
         no_multiple_reflection = this%no_multiple_reflection
         use_effective_angle = this%use_effective_angle
+        max_reflection_order = this%max_reflection_order
         output_file = this%output_file
 
         ! Initialize range-based parameters with default values
@@ -392,6 +398,7 @@ contains
         ! Copy output control parameters
         this%no_multiple_reflection = no_multiple_reflection
         this%use_effective_angle = use_effective_angle
+        this%max_reflection_order = max_reflection_order
         this%output_file = output_file
 
         ! Handle wavelength parameters and convert to wavenumber if needed
@@ -561,6 +568,19 @@ contains
             write(*,'(a,f7.2,a)') "ERROR: Sea surface temperature ", this%sea_surface_temperature, &
                 " K is out of valid range [271, 311] K"
             write(*,'(a)') "Valid sea surface temperature range: 271.0 to 311.0 K"
+            if (present(is_success)) then
+                is_success = .false.
+                return
+            else
+                stop 1
+            end if
+        end if
+
+        ! Validate maximum multiple-reflection order: must be in range [1, 20]
+        if (this%max_reflection_order < 1 .or. this%max_reflection_order > 20) then
+            write(*,'(a,i0,a)') "ERROR: max_reflection_order ", this%max_reflection_order, &
+                " is out of valid range [1, 20]"
+            write(*,'(a)') "Valid maximum multiple-reflection order range: 1 to 20"
             if (present(is_success)) then
                 is_success = .false.
                 return
