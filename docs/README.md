@@ -72,5 +72,5 @@ Sample configuration files for different use cases:
 
 ---
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **License**: Apache License 2.0
