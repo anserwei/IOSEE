@@ -33,6 +33,19 @@
 ! Author:     Dr. Jian Wei
 ! Email:      anser@tamu.edu
 !
+! History:
+!   Oct 2025  - Original implementation (v0.8.1)
+!   Jan 2026  - Spectral and narrow-band modes: serial wind loop replaced by a
+!               single get_emissivity_optimized call (v0.9.0)
+!   Feb 2026  - Viewing angles extended to 85 deg via blend_angle_results at the
+!               70 deg effective/geometric boundary (v0.9.3)
+!             - Added enforce_emissivity_monotonicity; effective view angle LUT
+!               smoothed after loading (v0.9.4)
+!             - Wind-adaptive effective view angle LUT smoothing (v0.9.5)
+!   Mar 2026  - First stable release (v1.0.0)
+!   Nov 2026  - Polarized mode honours no_multiple_reflection (v1.1.0)
+!             - Passes user-configurable max_reflection_order to ocean_emissivity
+!
 ! Command Line Arguments (flexible key=value format, order independent):
 !   config_file              : Configuration file (namelist format, required)
 !   output=<file>            : Output file path (NetCDF, optional override)
@@ -41,6 +54,7 @@
 !   mode = 'spectral'        : Continuous wavenumber calculations
 !   mode = 'narrow-band'     : Band-averaged with Planck function weighting
 !   polarization = 'enable'  : Output V and H polarization separately
+!   max_reflection_order = 8 : Maximum multiple-reflection order (1-20)
 !
 
 program driver
@@ -208,7 +222,7 @@ program driver
     call initialize_parallel_env(num_threads)
     print *, "Initialized parallel environment with", num_threads, "OpenMP threads."
 
-    call initialize_workspace_pool_emiss(err_oe)
+    call initialize_workspace_pool_emiss(err_oe, config%max_reflection_order)
     if (err_oe%code /= 0) then
         print *, "Error initializing ocean emissivity pool:", err_oe%message
         stop
@@ -230,6 +244,7 @@ program driver
     write(*,'(a, i0)') "  Number of wind speeds: ", n_winds
     write(*,'(a, f6.1)') "  Sea surface temperature (K):       ", temp_in
     write(*,'(a, f6.1)') "  Sea surface salinity (PSU):       ", salinity_in
+    write(*,'(a, i0)') "  Max multiple-reflection order: ", config%max_reflection_order
 
     if (trim(config%mode) == 'spectral') then
         ! For spectral mode, use first band settings
@@ -822,6 +837,13 @@ contains
         ! (~53° for water) before decreasing at large angles. Clamping destroys this.
         ! H-pol emissivity is physically monotonically decreasing with angle.
         call enforce_emissivity_monotonicity(emiss_h)
+        if (config%no_multiple_reflection) then
+            if (has_angles_gt70) then
+                call smooth_70_boundary(emiss_noref_v)
+                call smooth_70_boundary(emiss_noref_h)
+            end if
+            call enforce_emissivity_monotonicity(emiss_noref_h)
+        end if
 
         call system_clock(end_clock)
         elapsed = real(end_clock - start_clock, jprd) / real(clock_rate, jprd)
@@ -840,12 +862,23 @@ contains
 
         ! Save polarized results
         write(*,'(a, a)') "Writing polarized results to NetCDF file: ", trim(output_file)
-        if (config%is_wavelength_input) then
-            call save_spectral_polarized_emissivity_wl(output_file, config, angles, winds, wavelen, &
-                emiss_v, emiss_h, temp_in, salinity_in)
+        if (config%no_multiple_reflection) then
+            write(*,'(a)') "  Output mode: emissivity WITHOUT multiple reflection (first-order Fresnel)"
+            if (config%is_wavelength_input) then
+                call save_spectral_polarized_emissivity_wl(output_file, config, angles, winds, wavelen, &
+                    emiss_noref_v, emiss_noref_h, temp_in, salinity_in)
+            else
+                call save_spectral_polarized_emissivity(output_file, config, angles, winds, wavenum, &
+                    emiss_noref_v, emiss_noref_h, temp_in, salinity_in)
+            end if
         else
-            call save_spectral_polarized_emissivity(output_file, config, angles, winds, wavenum, &
-                emiss_v, emiss_h, temp_in, salinity_in)
+            if (config%is_wavelength_input) then
+                call save_spectral_polarized_emissivity_wl(output_file, config, angles, winds, wavelen, &
+                    emiss_v, emiss_h, temp_in, salinity_in)
+            else
+                call save_spectral_polarized_emissivity(output_file, config, angles, winds, wavenum, &
+                    emiss_v, emiss_h, temp_in, salinity_in)
+            end if
         end if
         write(*,'(a)') "Polarized emissivity computation and saving completed successfully."
 
