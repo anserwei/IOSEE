@@ -22,7 +22,7 @@ This document provides a comprehensive technical overview of the IOSEE codebase 
 | Model | Reference | Implementation |
 |-------|-----------|----------------|
 | **Ocean Emissivity** | Wu & Smith (1997) | Rough sea surface emissivity for 8-13 µm |
-| **Multiple Reflections** | Masuda (2006) | Up to 5 reflection orders with 1e-8 convergence tolerance |
+| **Multiple Reflections** | Masuda (2006) | Up to `max_reflection_order` orders (default 8, configurable 1–20) with 1e-8 convergence tolerance |
 | **Wave Slopes** | Cox-Munk (1954) | Isotropic Gaussian slope distribution: σ² = 0.003 + 0.00512×U₁₀ |
 | **Effective View Angle** | Nalli et al. (2008, 2023) | SST-dependent 3D effective view angle LUT (0-70 deg) with PCHIP smoothing and normal angle blending (>70 deg) |
 | **Polarization** | Henderson et al. (2003); Li et al. (2012) | V and H components with 2D frame rotation |
@@ -160,7 +160,7 @@ end do
 ### 4.3 Polarized Mode
 - Separate V (vertical, p-pol, TM) and H (horizontal, s-pol, TE) components
 - Polarization frame rotation for 2D rough surfaces (Li, Pinel & Bourlier 2012)
-- Multiple reflections applied independently to V and H (polarized first-bounce, unpolarized higher-order)
+- Multiple reflections applied independently to V and H (polarized first-bounce, unpolarized higher-order); both passes start from the same initial reflected-path state
 - Monotonicity enforcement applied to H-pol only; V-pol is exempt due to Brewster maximum near 50-55°
 
 ---
