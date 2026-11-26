@@ -6,10 +6,10 @@
 
 | Field           | Value      |
 |-----------------|------------|
-| Version         | **1.0.0**  |
-| Release Date    | 2026-03-21 |
+| Version         | **1.1.0**  |
+| Release Date    | 2026-11-26 |
 | Build Type      | Release    |
-| Prior Version   | 0.9.6 (2026-03-04) |
+| Prior Version   | 1.0.0 (2026-03-21) |
 | First Version   | 0.8.1 (2025-10-09) |
 
 ---
