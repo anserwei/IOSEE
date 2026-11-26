@@ -209,19 +209,27 @@ The Masuda (2006) multiple reflection model accounts for radiation that bounces 
 
 ### 3.2 Implementation Parameters
 
-From `ocean_emissivity.F90` (lines 81, 117-118):
+From `ocean_emissivity.F90` (module parameters):
 
 ```fortran
-integer(kind=jpim), parameter :: MAX_REFLECTION_ORDER = 5
+integer(kind=jpim), parameter :: DEFAULT_REFLECTION_ORDER = 8
+integer(kind=jpim), save      :: max_reflection_order = DEFAULT_REFLECTION_ORDER
 real(kind=jprd), parameter :: REFLECTION_CONVERGENCE_TOL = 1.0e-8_jprd
 integer(kind=jpim), parameter :: MIN_REFLECTION_ORDER = 2
 ```
+
+The maximum order is user-configurable through the namelist option
+`max_reflection_order` (1 – 20, default 8) and is passed to the module by
+`initialize_workspace_pool_emiss` before any parallel region. Truncation error
+relative to a 20-order reference (1000 cm⁻¹, 10–70°, 0–15 m/s) is ≈ 1e-3 at
+5 orders, ≈ 1e-4 at 8 orders, and ≈ 4e-5 at 10 orders; the limit is reached
+only at large view angles and high wind speeds.
 
 ### 3.3 Algorithm (`compute_multiple_reflection_kernel`, lines 1085-1203)
 
 #### Iterative Loop:
 ```fortran
-do k = 1, MAX_REFLECTION_ORDER
+do k = 1, max_reflection_order
     ! Compute contribution from k-th reflection order
     ws%iterations%temp_integral(i,j) = ws%iterations%weight(i,j) * &
                                        refle_fresnel0(i,j) * &
@@ -242,12 +250,12 @@ end do
 
 #### Mathematical Series:
 ```
-ε_total = ε₁ + Σₙ₌₂⁵ Rⁿ⁻¹ × ε₁
+ε_total = ε₁ + Σₙ₌₂ᴺ Rⁿ⁻¹ × ε₁
 
 Where:
 ε₁ = first-order (no reflection) emissivity
 R = Fresnel reflectance at facet
-n = reflection order (up to 5)
+n = reflection order (up to N = max_reflection_order, default 8)
 ```
 
 #### Convergence Check:
