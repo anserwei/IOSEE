@@ -3,18 +3,71 @@
 All notable capability changes to the IOSEE (Infrared Ocean Surface
 Effective Emissivity) package are documented in this file.
 
-Only capability additions, improvements, and interface changes are
-recorded. Internal maintenance and routine bug fixes are not included.
+---
 
-Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-and [Semantic Versioning](https://semver.org/).
+## [1.1.0] — 2026-11-26
 
-> **Note on version numbering.** Versions `0.8.1` through `0.9.6`
-> constituted the public beta of IOSEE. Release **1.0.0** is the first
-> stable release with a frozen public API and the full physics pipeline
-> validated across the 10 – 5000 cm⁻¹ infrared range. The previous
-> development tags `1.0.0 … 1.0.12` have been renumbered to the
-> semver-compliant `0.8.1 … 1.0.0` scheme shown below.
+### Summary
+
+Minor release. Adds the `max_reflection_order` namelist option (default
+raised from 5 to 8), corrects the multiple-reflection contribution to
+horizontally polarized (H-pol) emissivity, makes polarized mode honour
+`no_multiple_reflection`, restores the build under CMake ≥ 4.0 on macOS,
+and fixes an out-of-range example configuration. With
+`max_reflection_order = 5`, unpolarized and V-pol results are bit-for-bit
+identical to 1.0.0.
+
+### Added
+
+- `max_reflection_order` namelist option (integer, 1 – 20, default 8):
+  maximum multiple-reflection order, previously fixed at 5
+  (`lib/configuration.F90`, `src/ocean_emissivity.F90`, `src/driver.F90`).
+
+### Changed
+
+- Default maximum reflection order 5 → 8. Emissivity increases by up to
+  ≈ 3 × 10⁻³ at large view angles and high wind speeds (none below 45°);
+  truncation error vs. a 20-order reference falls from ≈ 10⁻³ to ≈ 10⁻⁴.
+
+### Fixed
+
+- `src/ocean_emissivity.F90` — `process_single_polarized_emissivity_case()`:
+  H-pol multiple reflection was largely lost. `compute_multiple_reflection_kernel()`
+  overwrites `ws%iterations%normalized_emiss_sp` in place while iterating;
+  the H-pol pass ran after the V-pol pass on the same workspace and started
+  from the V-pol final iterate instead of the reflected-path emission. The
+  initial state is now saved before the V-pol pass and restored before the
+  H-pol pass.
+  - Effect: H-pol emissivity increases by up to ≈ 0.02–0.03 at large view
+    angles and high wind speeds (e.g. +0.025 at 1000 cm⁻¹, 15 m/s, 70°);
+    negligible near nadir and at low wind.
+  - Consistency: max |(ε_V + ε_H)/2 − ε_unpolarized| reduced from
+    1.3 × 10⁻² to 2.8 × 10⁻⁴ (residual from Fresnel LUT vs. exact Fresnel).
+- `src/driver.F90` — `process_polarized_spectral_mode()`: the
+  `no_multiple_reflection` option was silently ignored in polarized mode.
+  When enabled, first-order V/H emissivities are now post-processed
+  (70° boundary smoothing; monotonicity on H-pol only) and written,
+  consistent with the unpolarized path.
+- `CMakeLists.txt` — build failed on macOS with CMake ≥ 4.0
+  (`ld: library 'System' not found`), because CMake no longer sets
+  `CMAKE_OSX_SYSROOT` and Homebrew GCC carries a hard-coded sysroot to an
+  SDK that may no longer exist. The active SDK is now resolved via
+  `xcrun --sdk macosx --show-sdk-path` before `project()`, unless
+  `CMAKE_OSX_SYSROOT` or `SDKROOT` is already set.
+- `examples/narrow_band_option2.config`,
+  `docs/config_case/narrow_band_option2.config` — `wind_end` 19.0 → 18.0
+  (valid range is 0–18 m/s); the case previously aborted at input
+  validation.
+
+### Verification
+
+- First-order V/H emissivity agrees with an independent Cox-Munk /
+  Fresnel / polarization-rotation reference integration to ≤ 5 × 10⁻⁵
+  (800–1200 cm⁻¹, 0–70°, 0–15 m/s).
+- All `examples/*.config` cases run to completion; no NaN values;
+  runtime unchanged.
+
+---
 
 ---
 
